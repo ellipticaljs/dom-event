@@ -9,23 +9,31 @@
         define(['elliptical-class'], factory);
     } else {
         // Browser globals (root is window)
-        root.elliptical=root.elliptical || {};
-        root.elliptical.DomEvent=factory(root.elliptical.Class);
+        root.elliptical = root.elliptical || {};
+        root.elliptical.DomEvent = factory(root.elliptical.Class);
         root.returnExports = root.elliptical.DomEvent;
     }
 }(this, function (Class) {
 
-    var SCROLL_EVENT='scroll.infinite';
-    var SCROLL_TOLERANCE=100;
+    var SCROLL_EVENT = 'scroll.infinite';
+    var SCROLL_TOLERANCE = 100;
 
     return Class.extend({
-        _events:[],
-        _node:null,
-        _context:this,
+        _events: [],
+        _node: null,
+        _context: this,
 
-        events:{},
+        events: {},
 
-        event:function(element, event, selector, callback){
+        /**
+         *
+         * @param {object} element -jquery object
+         * @param {string} event
+         * @param {string} selector
+         * @param {function} callback
+         * @public
+         */
+        event: function (element, event, selector, callback) {
             var obj = {};
             obj.element = element;
             obj.event = event;
@@ -52,16 +60,22 @@
             }
         },
 
-        bind:function(){
-            var events=this._events;
-            for(var prop in events){
-                if(events.hasOwnProperty(prop)){
-                    this._bindEvent(events,prop)
+        /**
+         * @public
+         */
+        bind: function () {
+            var events = this._events;
+            for (var prop in events) {
+                if (events.hasOwnProperty(prop)) {
+                    this._bindEvent(events, prop)
                 }
             }
         },
 
-        unbind:function(){
+        /**
+         * @public
+         */
+        unbind: function () {
             var events = this._events;
             var length = events.length;
             for (var i = 0; i < length; i++) {
@@ -71,25 +85,31 @@
             events.length = 0;
         },
 
-        onScroll:function(){
-            var handleScroll=function(){
-                var diff=$(document).height() - $(window).height();
-                if ($(window).scrollTop() > (diff-SCROLL_TOLERANCE)) {
-                    if(callback) callback();
+        /**
+         * @public
+         */
+        onScroll: function () {
+            var handleScroll = function () {
+                var diff = $(document).height() - $(window).height();
+                if ($(window).scrollTop() > (diff - SCROLL_TOLERANCE)) {
+                    if (callback) callback();
                 }
             };
-            var bindScroll=function(){
+            var bindScroll = function () {
                 window.requestAnimationFrame(handleScroll)
             };
-            this.event($(window),SCROLL_EVENT,bindScroll );
+            this.event($(window), SCROLL_EVENT, bindScroll);
         },
 
-        scrollOff:function(){
+        /**
+         * @public
+         */
+        scrollOff: function () {
             var events = this._events;
             var length = events.length;
             for (var i = 0; i < length; i++) {
                 var obj = events[i];
-                if(obj.event===SCROLL_EVENT){
+                if (obj.event === SCROLL_EVENT) {
                     (obj.selector) ? obj.element.off(obj.event, obj.selector) : obj.element.off(obj.event);
                     events.splice(i);
                     break;
@@ -97,69 +117,221 @@
             }
         },
 
-        _click:function(){
+        /**
+         *
+         * @param {array} arr - array of string
+         * @public
+         */
+        register: function (arr) {
+            if (!arr.length) return;
+            arr.forEach(function (name) {
+                if (!this._isRegistered(name)) document.registerElement(name);
+            });
+        },
+
+        /**
+         *
+         * @param {string} src
+         * @param {function} callback
+         */
+        load: function (src, callback) {
+            var newImg = new Image();
+            newImg.onload = function () {
+                callback(this);
+            };
+            newImg.src = src;
+        },
+
+        /**
+         *
+         * @param {object} node -html element
+         * @param {function} callback
+         * @returns {boolean}
+         * @public
+         */
+        preload: function (node, callback) {
+            var imgArray = [];
+            var data = {};
+            var element = $(node);
+            var images = element.find('img');
+            var length = images.length;
+            var counter = 0;
+            if (length === 0) {
+                if (callback) callback(null);
+                return false;
+            }
+            $.each(images, function (i, img) {
+                var image = new Image();
+                $(image).bind('load', function (event) {
+                    counter++;
+                    imgArray.push(image);
+                    if (counter === length) {
+                        if (callback) {
+                            data.images = imgArray;
+                            data.length = counter;
+                            callback(data);
+                        }
+                    }
+                });
+                image.src = img.src;
+            });
+            return true;
+        },
+
+
+        /**
+         *
+         * @returns {string}
+         * @private
+         */
+        _click: function () {
             return ('ontouchend' in document) ? 'touchstart' : 'click';
         },
 
-        _press:function(){
+        /**
+         *
+         * @returns {string}
+         * @private
+         */
+        _press: function () {
             return ('ontouchend' in document) ? 'touchend' : 'click';
         },
 
-        _tap:function(){
+        /**
+         *
+         * @returns {string}
+         * @private
+         */
+        _tap: function () {
             return ('ontouchend' in document) ? 'tap' : 'click';
         },
 
-        _getEvent:function(evt){
-            if(evt==='click') return this._click();
-            else if(evt==='press') return this._press();
-            else if(evt==='tap') return this._tap();
+        /**
+         *
+         * @param {string} evt
+         * @returns {string}
+         * @private
+         */
+        _getEvent: function (evt) {
+            if (evt === 'click') return this._click();
+            else if (evt === 'press') return this._press();
+            else if (evt === 'tap') return this._tap();
             else return evt;
         },
 
-        _bindEvent:function(events,prop){
+        /**
+         *
+         * @param {object} events
+         * @param {string} prop
+         * @private
+         */
+        _bindEvent: function (events, prop) {
             var event;
-            var callback=events[prop];
-            var eventParams=prop.split('@');
-            var length=eventParams.length;
-            if(length===1){
-                event=this._getEvent(eventParams[0]);
-                this.event(this._node,event,callback);
-            }else if(length===2){
-                var selector=eventParams[0];
-                event=this._getEvent(eventParams[1]);
-                if(selector==='document') this.event($(document),event,callback);
-                if(selector==='window') this.event($(window),event,callback);
-                else this.event(this.element,event,selector,callback)
+            var callback = events[prop];
+            var eventParams = prop.split('@');
+            var length = eventParams.length;
+            if (length === 1) {
+                event = this._getEvent(eventParams[0]);
+                this.event(this._node, event, callback);
+            } else if (length === 2) {
+                var selector = eventParams[0];
+                event = this._getEvent(eventParams[1]);
+                if (selector === 'document') this.event($(document), event, callback);
+                if (selector === 'window') this.event($(window), event, callback);
+                else this.event(this.element, event, selector, callback)
             }
+        },
+
+        /**
+         *
+         * @param {string} name
+         * @returns {boolean}
+         * @private
+         */
+        _isRegistered: function(name){
+            return document.createElement(name).constructor !== HTMLElement;
         }
 
-    },{
 
-        init:function(node,context){
-            if(node && node !==undefined) {
-                if(node.nodeName !==undefined) this.constructor._node=$(node);
+    }, {
+
+        /**
+         *
+         * @param {object} node -html element
+         * @param {object} [context]
+         */
+        init: function (node, context) {
+            if (node && node !== undefined) {
+                if (node.nodeName !== undefined) this.constructor._node = $(node);
             }
-            if(context && context !==undefined) this.constructor._context=context;
+            if (context && context !== undefined) this.constructor._context = context;
         },
 
-        event:function(element, event, selector, callback){
-            this.constructor.event(element,event,selector,callback);
+        /**
+         *
+         * @param {object} element -jquery object
+         * @param {string} event
+         * @param {string} selector
+         * @param {function} callback
+         * @public
+         */
+        event: function (element, event, selector, callback) {
+            this.constructor.event(element, event, selector, callback);
         },
 
-        bind:function(){
+        /**
+         * @public
+         */
+        bind: function () {
             this.constructor.bind();
         },
 
-        unbind:function(){
+        /**
+         * @public
+         */
+        unbind: function () {
             this.constructor.unbind();
         },
 
-        onScroll:function(){
+        /**
+         * @public
+         */
+        onScroll: function () {
             this.constructor.onScroll();
         },
 
-        scrollOff:function(){
+        /**
+         * @public
+         */
+        scrollOff: function () {
             this.constructor.scrollOff();
+        },
+
+        /**
+         * @public
+         */
+        register: function () {
+            this.constructor.register();
+        },
+
+        /**
+         *
+         * @param {string} src
+         * @param {function} callback
+         */
+        load:function(src, callback){
+            this.constructor.load(src, callback);
+        },
+
+        /**
+         *
+         * @param {object} node -html element
+         * @param {function} callback
+         * @returns {boolean}
+         * @public
+         */
+        preload:function(node, callback){
+            this.constructor.preload(node, callback);
         }
 
     });
