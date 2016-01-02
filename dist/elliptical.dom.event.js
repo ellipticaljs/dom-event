@@ -189,6 +189,15 @@
             return true;
         };
 
+        /**
+         *
+         * @param {string} selector
+         * @returns {object} -jquery object
+         */
+        this.find=function(selector){
+            if(this._node) return this._node.find(selector);
+            else return null;
+        };
 
         /**
          *
