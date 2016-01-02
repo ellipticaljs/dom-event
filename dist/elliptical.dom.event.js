@@ -3,37 +3,47 @@
 (function (root, factory) {
     if (typeof module !== 'undefined' && module.exports) {
         //commonjs
-        module.exports = factory(require('elliptical-class'));
+        module.exports = factory();
     } else if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define(['elliptical-class'], factory);
+        define([], factory);
     } else {
         // Browser globals (root is window)
         root.elliptical = root.elliptical || {};
-        root.elliptical.DomEvent = factory(root.elliptical.Class);
+        root.elliptical.DomEvent = factory();
         root.returnExports = root.elliptical.DomEvent;
     }
-}(this, function (Class) {
+}(this, function () {
 
     var SCROLL_EVENT = 'scroll.infinite';
     var SCROLL_TOLERANCE = 100;
 
-    return Class.extend({
-        _events: [],
-        _node: null,
-        _context: this,
 
-        events: {},
+    /**
+     * @param {object} [node] -html element
+     * @param {object} [context]
+     * @constructor
+     */
+    function DomEvent(node,context){
+        this._events= [];
+        this.events= {};
+        this._node=null;
+        this._context=this;
+        if (node && node !== undefined) {
+            if (node.nodeName !== undefined) this._node = $(node);
+        }
+        if (context && context !== undefined) this._context = context;
 
         /**
          *
          * @param {object} element -jquery object
          * @param {string} event
-         * @param {string} selector
+         * @param {string} [selector]
          * @param {function} callback
          * @public
          */
-        event: function (element, event, selector, callback) {
+        this.event=function (element, event, selector, callback) {
+            var context=this._context;
             var obj = {};
             obj.element = element;
             obj.event = event;
@@ -50,32 +60,32 @@
             if (selector) {
                 element.on(event, selector, function () {
                     var args = [].slice.call(arguments);
-                    if (callback) callback.apply(this._context, args);
+                    if (callback) callback.apply(context, args);
                 });
             } else {
                 element.on(event, function () {
                     var args = [].slice.call(arguments);
-                    if (callback) callback.apply(this._context, args);
+                    if (callback) callback.apply(context, args);
                 });
             }
-        },
+        };
 
         /**
          * @public
          */
-        bind: function () {
+        this.bind=function () {
             var events = this._events;
             for (var prop in events) {
                 if (events.hasOwnProperty(prop)) {
                     this._bindEvent(events, prop)
                 }
             }
-        },
+        };
 
         /**
          * @public
          */
-        unbind: function () {
+        this.unbind=function () {
             var events = this._events;
             var length = events.length;
             for (var i = 0; i < length; i++) {
@@ -83,12 +93,12 @@
                 (obj.selector) ? obj.element.off(obj.event, obj.selector) : obj.element.off(obj.event);
             }
             events.length = 0;
-        },
+        };
 
         /**
          * @public
          */
-        onScroll: function () {
+        this.onScroll=function () {
             var handleScroll = function () {
                 var diff = $(document).height() - $(window).height();
                 if ($(window).scrollTop() > (diff - SCROLL_TOLERANCE)) {
@@ -99,12 +109,12 @@
                 window.requestAnimationFrame(handleScroll)
             };
             this.event($(window), SCROLL_EVENT, bindScroll);
-        },
+        };
 
         /**
          * @public
          */
-        scrollOff: function () {
+        this.scrollOff=function () {
             var events = this._events;
             var length = events.length;
             for (var i = 0; i < length; i++) {
@@ -115,32 +125,33 @@
                     break;
                 }
             }
-        },
+        };
 
         /**
          *
          * @param {array} arr - array of string
          * @public
          */
-        register: function (arr) {
+        this.register=function (arr) {
+            var self=this;
             if (!arr.length) return;
             arr.forEach(function (name) {
-                if (!this._isRegistered(name)) document.registerElement(name);
+                if (!self._isRegistered(name)) document.registerElement(name);
             });
-        },
+        };
 
         /**
          *
          * @param {string} src
          * @param {function} callback
          */
-        load: function (src, callback) {
+        this.load=function (src, callback) {
             var newImg = new Image();
             newImg.onload = function () {
                 callback(this);
             };
             newImg.src = src;
-        },
+        };
 
         /**
          *
@@ -149,7 +160,7 @@
          * @returns {boolean}
          * @public
          */
-        preload: function (node, callback) {
+        this.preload=function (node, callback) {
             var imgArray = [];
             var data = {};
             var element = $(node);
@@ -176,7 +187,7 @@
                 image.src = img.src;
             });
             return true;
-        },
+        };
 
 
         /**
@@ -184,27 +195,27 @@
          * @returns {string}
          * @private
          */
-        _click: function () {
+        this._click=function () {
             return ('ontouchend' in document) ? 'touchstart' : 'click';
-        },
+        };
 
         /**
          *
          * @returns {string}
          * @private
          */
-        _press: function () {
+        this._press=function () {
             return ('ontouchend' in document) ? 'touchend' : 'click';
-        },
+        };
 
         /**
          *
          * @returns {string}
          * @private
          */
-        _tap: function () {
+        this._tap=function () {
             return ('ontouchend' in document) ? 'tap' : 'click';
-        },
+        };
 
         /**
          *
@@ -212,12 +223,12 @@
          * @returns {string}
          * @private
          */
-        _getEvent: function (evt) {
+        this._getEvent=function (evt) {
             if (evt === 'click') return this._click();
             else if (evt === 'press') return this._press();
             else if (evt === 'tap') return this._tap();
             else return evt;
-        },
+        };
 
         /**
          *
@@ -225,22 +236,23 @@
          * @param {string} prop
          * @private
          */
-        _bindEvent: function (events, prop) {
+        this._bindEvent=function (events, prop) {
+            var element=this._node;
             var event;
             var callback = events[prop];
             var eventParams = prop.split('@');
             var length = eventParams.length;
             if (length === 1) {
                 event = this._getEvent(eventParams[0]);
-                this.event(this._node, event, callback);
+                this.event(element, event, callback);
             } else if (length === 2) {
                 var selector = eventParams[0];
                 event = this._getEvent(eventParams[1]);
                 if (selector === 'document') this.event($(document), event, callback);
                 if (selector === 'window') this.event($(window), event, callback);
-                else this.event(this.element, event, selector, callback)
+                else this.event(element, event, selector, callback)
             }
-        },
+        };
 
         /**
          *
@@ -248,92 +260,14 @@
          * @returns {boolean}
          * @private
          */
-        _isRegistered: function(name){
+        this._isRegistered=function(name){
             return document.createElement(name).constructor !== HTMLElement;
-        }
+        };
+
+    }
+
+    return DomEvent;
 
 
-    }, {
-
-        /**
-         *
-         * @param {object} node -html element
-         * @param {object} [context]
-         */
-        init: function (node, context) {
-            if (node && node !== undefined) {
-                if (node.nodeName !== undefined) this.constructor._node = $(node);
-            }
-            if (context && context !== undefined) this.constructor._context = context;
-        },
-
-        /**
-         *
-         * @param {object} element -jquery object
-         * @param {string} event
-         * @param {string} selector
-         * @param {function} callback
-         * @public
-         */
-        event: function (element, event, selector, callback) {
-            this.constructor.event(element, event, selector, callback);
-        },
-
-        /**
-         * @public
-         */
-        bind: function () {
-            this.constructor.bind();
-        },
-
-        /**
-         * @public
-         */
-        unbind: function () {
-            this.constructor.unbind();
-        },
-
-        /**
-         * @public
-         */
-        onScroll: function () {
-            this.constructor.onScroll();
-        },
-
-        /**
-         * @public
-         */
-        scrollOff: function () {
-            this.constructor.scrollOff();
-        },
-
-        /**
-         * @public
-         */
-        register: function () {
-            this.constructor.register();
-        },
-
-        /**
-         *
-         * @param {string} src
-         * @param {function} callback
-         */
-        load:function(src, callback){
-            this.constructor.load(src, callback);
-        },
-
-        /**
-         *
-         * @param {object} node -html element
-         * @param {function} callback
-         * @returns {boolean}
-         * @public
-         */
-        preload:function(node, callback){
-            this.constructor.preload(node, callback);
-        }
-
-    });
 }));
 
