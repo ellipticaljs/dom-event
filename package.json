@@ -1,7 +1,7 @@
 {
   "name": "elliptical-dom-event",
-  "description": "JS Template",
-  "version": "1.0.2",
+  "description": "Dom Event Module",
+  "version": "1.0.3",
   "author": "S. Francis",
   "license": "MIT",
   "repository": {
