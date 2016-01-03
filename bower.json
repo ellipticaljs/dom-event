@@ -1,7 +1,7 @@
 {
   "name": "elliptical-dom-event",
   "description": "DOM event module",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "main": "dist/elliptical.dom.event.js",
   "authors": [
     "S. Francis"
