@@ -82,13 +82,13 @@ dom.find(selector);
            </div>
            <a class="see-more">see more</a>
          </div>
-
   </div>
 
 ```
 
 ```js
 
+//anonymous callback invoked on the node's "added" mutation event
 elliptical.binding('infinite-scroll',function(node){
     var DomEvent=elliptical.DomEvent;
     var dom=new DomEvent(node,this);
@@ -101,6 +101,7 @@ elliptical.binding('infinite-scroll',function(node){
 
     function handleScroll(){}
 
+    //dispose method invoked on the node's "removed" mutation event
     this.dispose=function(){
         dom.dispose();
     }
