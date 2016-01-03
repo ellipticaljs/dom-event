@@ -73,6 +73,18 @@ dom.find(selector);
   <link rel="import" href="bower_components/elliptical-binding/elliptical-binding.html">
   <link rel="import" href="bower_components/elliptical-dom-event/elliptical-dom-event.html">
 
+
+  <div class="card-container" ea-bind="infinite-scroll">
+         <div class="card">
+           <h2>Card Title</h2>
+           <div class=card-content">
+
+           </div>
+           <a class="see-more">see more</a>
+         </div>
+
+  </div>
+
 ```
 
 ```js
