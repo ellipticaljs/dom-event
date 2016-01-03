@@ -20,15 +20,16 @@
 
 
     /**
-     * @param {object} [node] -html element
+     * @param {object} node -html element
      * @param {object} [context]
      * @constructor
      */
     function DomEvent(node,context){
         this._events= [];
-        this.events= {};
         this._node=null;
         this._context=this;
+        this._scrollOn=false;
+
         if (node && node !== undefined) {
             if (node.nodeName !== undefined) this._node = $(node);
         }
@@ -44,7 +45,6 @@
          */
         this.event=function (element, event, selector, callback) {
             var context=this._context;
-            var obj = {};
 
             //support 2-4 params
             var length = arguments.length;
@@ -67,6 +67,7 @@
                 }
             }
             //store the params
+            var obj = {};
             obj.element = element;
             obj.event = event;
             obj.selector = selector;
@@ -104,6 +105,8 @@
          * @public
          */
         this.onScroll=function (callback) {
+            if(this._scrollOn) return;
+            else this._scrollOn=true;
             var handleScroll = function () {
                 var diff = $(document).height() - $(window).height();
                 if ($(window).scrollTop() > (diff - SCROLL_TOLERANCE)) {
@@ -120,6 +123,9 @@
          * @public
          */
         this.scrollOff=function () {
+            if(!this._scrollOn) return;
+            else this._scrollOn=false;
+
             var events = this._events;
             var length = events.length;
             for (var i = 0; i < length; i++) {
@@ -152,20 +158,27 @@
          */
         this.load=function (src, callback) {
             var newImg = new Image();
-            newImg.onload = function () {
-                callback(this);
-            };
+            var $newImg=$(newImg);
+            $newImg.bind('load.newImg',function(){
+                $newImg.unbind('load.newImg');
+                if(callback) callback(this);
+            });
+            //assign the src property to trigger bind
             newImg.src = src;
         };
 
         /**
          *
-         * @param {object} node -html element
+         * @param {object} [node] -html element
          * @param {function} callback
          * @returns {boolean}
          * @public
          */
         this.preload=function (node, callback) {
+            if(typeof node==='function'){
+                callback=node;
+                node=this._node;
+            }
             var imgArray = [];
             var data = {};
             var element = $(node);
@@ -178,9 +191,11 @@
             }
             $.each(images, function (i, img) {
                 var image = new Image();
-                $(image).bind('load', function (event) {
+                var $image=$(image);
+                $image.bind('load.image', function (event) {
                     counter++;
                     imgArray.push(image);
+                    $image.unbind('load.image');
                     if (counter === length) {
                         if (callback) {
                             data.images = imgArray;
@@ -189,6 +204,7 @@
                         }
                     }
                 });
+                //assign the src property to trigger the event above
                 image.src = img.src;
             });
             return true;
@@ -204,6 +220,10 @@
             else return null;
         };
 
+        this.dispose=function(){
+            this.unbind();
+            this.scrollOff();
+        };
 
         /**
          *
