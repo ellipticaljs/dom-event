@@ -36,7 +36,7 @@
 
         /**
          *
-         * @param {object} element -jquery object
+         * @param {object} [element] -jquery object
          * @param {string} event
          * @param {string} [selector]
          * @param {function} callback
@@ -45,17 +45,33 @@
         this.event=function (element, event, selector, callback) {
             var context=this._context;
             var obj = {};
+
+            //support 2-4 params
+            var length = arguments.length;
+
+            if(length===2){
+                callback=event;
+                event=element;
+                element=this._node;
+                selector=null;
+            }
+            if (length === 3) {
+                if(typeof element==='string'){
+                    callback=selector;
+                    selector=event;
+                    event=element;
+                    element=this._node;
+                }else{
+                    callback=selector;
+                    selector=null;
+                }
+            }
+            //store the params
             obj.element = element;
             obj.event = event;
-
-            //support 3-4 params
-            var length = arguments.length;
-            if (length === 3) {
-                callback = (typeof selector === 'function') ? selector : null;
-                selector = null;
-            }
             obj.selector = selector;
             obj.callback = callback;
+
             this._events.push(obj);
             if (selector) {
                 element.on(event, selector, function () {
@@ -70,17 +86,6 @@
             }
         };
 
-        /**
-         * @public
-         */
-        this.bind=function () {
-            var events = this._events;
-            for (var prop in events) {
-                if (events.hasOwnProperty(prop)) {
-                    this._bindEvent(events, prop)
-                }
-            }
-        };
 
         /**
          * @public
@@ -98,7 +103,7 @@
         /**
          * @public
          */
-        this.onScroll=function () {
+        this.onScroll=function (callback) {
             var handleScroll = function () {
                 var diff = $(document).height() - $(window).height();
                 if ($(window).scrollTop() > (diff - SCROLL_TOLERANCE)) {
@@ -198,6 +203,7 @@
             if(this._node) return this._node.find(selector);
             else return null;
         };
+
 
         /**
          *

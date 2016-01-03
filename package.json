@@ -1,7 +1,7 @@
 {
   "name": "elliptical-dom-event",
   "description": "Dom Event Module",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "author": "S. Francis",
   "license": "MIT",
   "repository": {
@@ -9,7 +9,7 @@
     "url": "https://github.com/ellipticaljs/dom-event.git"
   },
   "dependencies":{
-    "elliptical-class":"git+https://github.com/ellipticaljs/class.git"
+
   },
   "devDependencies": {
     "gulp": "^3.8.7",
