@@ -16,6 +16,7 @@
 }(this, function () {
 
     var SCROLL_EVENT = 'scroll.infinite';
+    var SCROLL_TOP_EVENT = 'scroll.top';
     var SCROLL_TOLERANCE = 100;
 
 
@@ -28,6 +29,7 @@
         this._events= [];
         this._node=null;
         this._context=this;
+        this._infiniteScrollOn=false;
         this._scrollOn=false;
 
         if (node && node !== undefined) {
@@ -108,8 +110,48 @@
             if(this._scrollOn) return;
             else this._scrollOn=true;
             var handleScroll = function () {
+                if (callback) callback(window.scrollY);
+            };
+            var bindScroll = function () {
+                window.requestAnimationFrame(handleScroll)
+            };
+            this.event($(window), SCROLL_TOP_EVENT, bindScroll);
+        };
+
+        /**
+         * @public
+         */
+        this.scrollOff=function () {
+            if(!this._scrollOn) return;
+            else this._scrollOn=false;
+
+            var events = this._events;
+            var length = events.length;
+            for (var i = 0; i < length; i++) {
+                var obj = events[i];
+                if (obj.event === SCROLL_TOP_EVENT) {
+                    (obj.selector) ? obj.element.off(obj.event, obj.selector) : obj.element.off(obj.event);
+                    events.splice(i);
+                    break;
+                }
+            }
+        };
+
+
+
+        /**
+         * @public
+         */
+        this.onInfiniteScroll=function (y,callback) {
+            if(typeof y==='function'){
+                callback=y;
+                y=SCROLL_TOLERANCE;
+            }
+            if(this._infiniteScrollOn) return;
+            else this._infiniteScrollOn=true;
+            var handleScroll = function () {
                 var diff = $(document).height() - $(window).height();
-                if ($(window).scrollTop() > (diff - SCROLL_TOLERANCE)) {
+                if ($(window).scrollTop() > (diff - y)) {
                     if (callback) callback();
                 }
             };
@@ -122,7 +164,7 @@
         /**
          * @public
          */
-        this.scrollOff=function () {
+        this.infiniteScrollOff=function () {
             if(!this._scrollOn) return;
             else this._scrollOn=false;
 
