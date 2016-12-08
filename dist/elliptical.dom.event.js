@@ -68,6 +68,7 @@
                     selector=null;
                 }
             }
+            if(element.selector===undefined) element=$(element);
             //store the params
             var obj = {};
             obj.element = element;
