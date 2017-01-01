@@ -263,7 +263,24 @@
             else return null;
         };
 
-        this.dispose=function(){
+        /**
+         *
+         * @param {string} selector
+         * @returns {object} -HTML Element
+         */
+        this.select=function(selector){
+            if(this._node) {
+                var jQueryObj=this._node.find(selector);
+                if(jQueryObj[0]) return jQueryObj[0];
+                else return null;
+            }
+            else return null;
+        };
+
+      /**
+       * dispose
+       */
+      this.dispose=function(){
             this.unbind();
             this.scrollOff();
         };
