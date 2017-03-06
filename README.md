@@ -49,6 +49,9 @@ function onImagesLoaded(){};
 //node descendants selector
 dom.find(selector);
 
+//fire event
+dom.fire('my-event',data);
+
 
 //device events
 //"click"==desktop click, mobile touchstart
