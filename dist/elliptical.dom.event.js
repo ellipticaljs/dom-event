@@ -278,6 +278,22 @@
         };
 
       /**
+       *  fires an event
+       * @param {string} eventName
+       * @param {object} data
+       */
+      this.fire=function(eventName,data){
+        var event = new Event(eventName, {
+          bubbles: true,
+          cancelable: true,
+          composed: true
+        });
+
+        event.detail = data;
+        node.dispatchEvent(event);
+      };
+
+      /**
        * dispose
        */
       this.dispose=function(){
